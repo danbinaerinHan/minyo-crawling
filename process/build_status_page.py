@@ -138,7 +138,14 @@ def main():
             "rare": int((vs.route_type == "keyword_rare").sum())}
     blob = json.dumps(data, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
     tpl = (REV / "수집현황_template.html").read_text(encoding="utf-8")
-    (REV / "수집현황.html").write_text(tpl.replace("/*__DATA__*/null", blob), encoding="utf-8")
+    page = tpl.replace("/*__DATA__*/null", blob)
+    (REV / "수집현황.html").write_text(page, encoding="utf-8")
+    # GitHub Pages용: 같은 페이지를 완전한 HTML 문서로 감싸 docs/index.html에 쓴다
+    (ROOT / "docs").mkdir(exist_ok=True)
+    (ROOT / "docs" / "index.html").write_text(
+        '<!doctype html><html lang="ko"><head><meta charset="utf-8">'
+        '<meta name="viewport" content="width=device-width,initial-scale=1"></head><body>'
+        + page + "</body></html>", encoding="utf-8")
     print(f"rows={len(rows)} runs={runs}")
 
 
