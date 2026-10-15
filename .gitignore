@@ -1,0 +1,22 @@
+# 환경
+.venv/
+__pycache__/
+.DS_Store
+
+# 수집 데이터 (용량·저작권·개인정보 — 공개 저장소에 올리지 않음)
+db/
+logs/
+mock/
+mock_v2/
+review/*.csv
+review/*.xlsx
+review/수집현황.html
+
+# 외부 데이터셋에서 온 파일 (GugakVocalSet 메타데이터·가사 구절)
+total_metadata.csv
+master/anchor_phrases.csv
+master/anchor_songs.csv
+
+# 미공개 연구 메모
+BRAINSTORM_민요_유튜브_데이터셋.md
+RESEARCH_연구의미_연구질문_어노테이션.md

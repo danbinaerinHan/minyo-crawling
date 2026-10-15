@@ -1,0 +1,395 @@
+<title>민요 수집 현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: 한 열의 모니터링 화면. 요약 → 구성 막대 → 탭(영상·곡·채널·긴 영상). 한지처럼 옅은 바탕에 쪽빛 강조. */
+:root {
+  --bg: #f4f5f2;
+  --surface: #ffffff;
+  --surface-2: #eceee9;
+  --ink: #1c232c;
+  --ink-2: #4f5864;
+  --muted: #7a828c;
+  --line: #dde0da;
+  --accent: #2c4e80;
+  --accent-soft: #e3e9f2;
+  --star: #b8860b;
+  --src-broadcast: #2a78d6;
+  --src-fusion: #eb6834;
+  --src-institution: #1baf7a;
+  --src-keyword: #eda100;
+  --warn: #9a5b00;
+  --font-display: "Gowun Batang", "Nanum Myeongjo", "AppleMyungjo", serif;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --radius: 8px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161b; --surface: #191e25; --surface-2: #222833; --ink: #e6e9ee; --ink-2: #b4bcc7; --muted: #8a93a0;
+    --line: #2b323d; --accent: #8fb0e3; --accent-soft: #23304a; --star: #e0b54a;
+    --src-broadcast: #3987e5; --src-fusion: #d95926; --src-institution: #199e70; --src-keyword: #c98500; --warn: #e3a94a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161b; --surface: #191e25; --surface-2: #222833; --ink: #e6e9ee; --ink-2: #b4bcc7; --muted: #8a93a0;
+  --line: #2b323d; --accent: #8fb0e3; --accent-soft: #23304a; --star: #e0b54a;
+  --src-broadcast: #3987e5; --src-fusion: #d95926; --src-institution: #199e70; --src-keyword: #c98500; --warn: #e3a94a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.55; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 28px; }
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+header { display: grid; gap: 6px; }
+.eyebrow { font-size: 12px; letter-spacing: .08em; color: var(--muted); }
+h1 { font-family: var(--font-display); font-size: clamp(28px, 4vw, 38px); line-height: 1.2; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+.lede { color: var(--ink-2); max-width: 68ch; margin: 0; }
+
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
+.tile .k { font-size: 12px; color: var(--muted); }
+.tile .v { font-family: var(--font-mono); font-size: 26px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.tile .s { font-size: 12px; color: var(--ink-2); }
+
+.mix { display: grid; gap: 10px; }
+.mix-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; }
+.mix-head h2 { font-size: 15px; margin: 0; font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; flex: none; }
+.stack { display: flex; gap: 2px; height: 14px; }
+.stack .seg { height: 100%; min-width: 2px; }
+.stack .seg:first-child { border-radius: 4px 0 0 4px; }
+.stack .seg:last-child { border-radius: 0 4px 4px 0; }
+.stack .seg:only-child { border-radius: 4px; }
+.mix-labels { display: flex; gap: 2px; font-size: 12px; color: var(--ink-2); }
+.mix-labels div { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tab { appearance: none; background: none; border: 0; border-bottom: 2px solid transparent; padding: 10px 14px; font: inherit; font-weight: 500; color: var(--ink-2); cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .c { font-family: var(--font-mono); font-size: 12px; color: var(--muted); margin-left: 4px; }
+.panel { display: grid; gap: 14px; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.filters input[type="search"], .filters select { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+.filters input[type="search"] { flex: 1 1 220px; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--ink-2); padding: 6px 4px; cursor: pointer; }
+.count { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+.list { display: grid; gap: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 14px; border-top: 1px solid var(--line); align-items: start; }
+.item:first-child { border-top: 0; }
+.star { appearance: none; border: 0; background: none; cursor: pointer; font-size: 17px; line-height: 1; color: var(--line); padding: 2px 0 0; }
+.star[aria-pressed="true"] { color: var(--star); }
+.title { color: var(--ink); text-decoration: none; font-weight: 500; overflow-wrap: anywhere; }
+.title:hover { color: var(--accent); text-decoration: underline; }
+.meta { font-size: 12px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 2px; }
+.meta .src { display: inline-flex; align-items: center; gap: 5px; color: var(--ink-2); }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chip { font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--surface-2); color: var(--ink-2); white-space: nowrap; }
+.chip.song { background: var(--accent-soft); color: var(--ink); }
+.chip.confirmed { box-shadow: inset 0 0 0 1px var(--accent); }
+.chip.flag { color: var(--warn); background: transparent; box-shadow: inset 0 0 0 1px var(--warn); }
+.side { display: grid; justify-items: end; gap: 4px; font-size: 12px; color: var(--ink-2); text-align: right; }
+.tier { display: inline-flex; gap: 3px; align-items: center; }
+.tier i { width: 7px; height: 7px; border-radius: 2px; background: var(--line); display: inline-block; }
+.tier i.on { background: var(--accent); }
+.more { justify-self: center; font: inherit; color: var(--accent); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 8px 18px; cursor: pointer; }
+.empty { padding: 32px 16px; text-align: center; color: var(--muted); }
+
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th, td { text-align: left; padding: 9px 12px; border-top: 1px solid var(--line); vertical-align: middle; }
+thead th { border-top: 0; font-weight: 500; color: var(--muted); font-size: 12px; background: var(--surface); position: sticky; top: 0; }
+td.r, th.r { text-align: right; }
+.barcell { width: 42%; min-width: 180px; }
+.songlink { appearance: none; background: none; border: 0; padding: 0; font: inherit; color: var(--ink); cursor: pointer; text-align: left; }
+.songlink:hover { color: var(--accent); text-decoration: underline; }
+.rate { display: flex; align-items: center; gap: 8px; }
+.rate .track { flex: 1; height: 8px; background: var(--surface-2); border-radius: 4px; overflow: hidden; min-width: 60px; }
+.rate .fill { height: 100%; background: var(--accent); border-radius: 0 4px 4px 0; }
+.note { font-size: 13px; color: var(--ink-2); max-width: 72ch; margin: 0; }
+.seglist { display: grid; gap: 8px; }
+.segrow { display: grid; grid-template-columns: 120px minmax(0, 1fr) auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+#tip { position: fixed; pointer-events: none; z-index: 10; background: var(--ink); color: var(--bg); font-size: 12px; padding: 6px 9px; border-radius: 6px; max-width: 260px; }
+footer { font-size: 12px; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .item { grid-template-columns: 24px minmax(0, 1fr); }
+  .side { grid-column: 2; justify-items: start; text-align: left; display: flex; flex-wrap: wrap; gap: 10px; }
+  .segrow { grid-template-columns: 1fr; }
+  .count { margin-left: 0; width: 100%; }
+}
+@media (prefers-reduced-motion: no-preference) { .title, .songlink { transition: color .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">국악 유튜브 데이터셋 · 목업 크롤링</div>
+    <h1>민요 수집 현황</h1>
+    <p class="lede" id="lede"></p>
+  </header>
+
+  <section class="tiles" id="tiles" aria-label="요약"></section>
+
+  <section class="mix" aria-label="수집 경로별 구성">
+    <div class="mix-head">
+      <h2>어디서 모았나</h2>
+      <div class="legend" id="legend"></div>
+    </div>
+    <div class="stack" id="mixbar"></div>
+    <div class="mix-labels" id="mixlabels"></div>
+  </section>
+
+  <nav class="tabs" role="tablist" aria-label="보기">
+    <button class="tab" role="tab" id="tab-videos" aria-selected="true" data-tab="videos">영상<span class="c" id="c-videos"></span></button>
+    <button class="tab" role="tab" id="tab-songs" aria-selected="false" data-tab="songs">곡별<span class="c" id="c-songs"></span></button>
+    <button class="tab" role="tab" id="tab-channels" aria-selected="false" data-tab="channels">채널별<span class="c" id="c-channels"></span></button>
+    <button class="tab" role="tab" id="tab-long" aria-selected="false" data-tab="long">긴 영상</button>
+  </nav>
+
+  <section class="panel" id="p-videos" role="tabpanel" aria-labelledby="tab-videos">
+    <div class="filters">
+      <input type="search" id="q" placeholder="제목, 채널, 곡명 검색" aria-label="검색">
+      <select id="f-src" aria-label="수집 경로">
+        <option value="">모든 경로</option>
+        <option value="broadcast">방송</option>
+        <option value="fusion_team">퓨전팀 채널</option>
+        <option value="institution">국악 기관</option>
+        <option value="keyword">키워드 검색</option>
+      </select>
+      <select id="f-tier" aria-label="오디오 등급">
+        <option value="">모든 오디오 등급</option>
+        <option value="12">깨끗한 오디오 (1–2)</option>
+        <option value="3">3 · MV·방송 무대</option>
+        <option value="4">4 · 공연 실황</option>
+        <option value="5">5 · 직캠·재업로드</option>
+      </select>
+      <select id="f-form" aria-label="영상 형태">
+        <option value="">모든 형태</option>
+        <option value="broadcast">방송 클립</option>
+        <option value="live_stage">공연 실황</option>
+        <option value="lesson">강습</option>
+        <option value="official_mv">공식 MV·음원</option>
+        <option value="topic_audio">Topic 음원</option>
+        <option value="vertical">세로 영상 (숏츠 가능성)</option>
+        <option value="clip">짧은 클립 (60초 이하)</option>
+        <option value="other">기타</option>
+      </select>
+      <select id="sort" aria-label="정렬">
+        <option value="views">조회수 많은 순</option>
+        <option value="recent">최근 업로드 순</option>
+        <option value="long">긴 영상 순</option>
+        <option value="n">수집 순서</option>
+      </select>
+      <label class="check"><input type="checkbox" id="f-etc"> 기타 민요</label>
+      <label class="check"><input type="checkbox" id="f-desc"> 설명란 언급</label>
+      <label class="check"><input type="checkbox" id="f-segs"> 구간 정보</label>
+      <label class="check"><input type="checkbox" id="f-lyr"> 자막 가사</label>
+      <label class="check"><input type="checkbox" id="f-pop"> 민요 기반 대중가요</label>
+      <label class="check"><input type="checkbox" id="f-multi"> 여러 곡</label>
+      <label class="check"><input type="checkbox" id="f-confirmed"> 괄호로 원곡 확정</label>
+      <label class="check"><input type="checkbox" id="f-star"> 별표만</label>
+      <span class="count num" id="count"></span>
+    </div>
+    <div class="list" id="list"></div>
+    <button class="more" id="more" hidden>더 보기</button>
+  </section>
+
+  <section class="panel" id="p-songs" role="tabpanel" aria-labelledby="tab-songs" hidden>
+    <p class="note">제목에서 자동으로 찾은 민요(자체 데이터셋 305곡의 곡명 기준)마다 영상이 몇 개 모였는지 보여줘요. 곡명을 누르면 그 곡의 영상만 볼 수 있어요.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>곡</th><th class="r">영상</th><th class="barcell">수집 경로</th><th class="r">깨끗한 오디오</th></tr></thead>
+        <tbody id="songrows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="p-channels" role="tabpanel" aria-labelledby="tab-channels" hidden>
+    <p class="note">채널 영상 목록을 통째로 받은 뒤 상세 정보를 받을 영상을 골랐어요. 방송·기관 채널은 제목에 민요 곡명이 있는 영상, 주요 퓨전팀 공식 채널은 창작 제목이 많아서 영상 전부를 받아요. 목록 수집은 제목만 받기 때문에 빨라요.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>채널</th><th>유형</th><th class="r">전체 영상</th><th class="r">민요 매칭</th><th>매칭 비율</th><th class="r">괄호 확정</th><th class="r">상세 수집</th><th class="r">목록 수집</th></tr></thead>
+        <tbody id="chanrows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="panel" id="p-long" role="tabpanel" aria-labelledby="tab-long" hidden>
+    <p class="note">남도콜링 공연 실황(64분)의 자동 자막에서 민요 가사 구절을 찾아 구간을 잡은 결과예요. 노래 부분은 자막이 대부분 [음악]으로 처리돼서, 확실하게 잡힌 구간만 남겼어요. 시각을 누르면 그 지점부터 재생돼요.</p>
+    <div class="seglist" id="seglist"></div>
+    <p class="note">자막을 사람이 읽어 보면 이야홍타령(40~45분), 손치기 발치기(48~52분) 같은 곡도 멘트로 확인돼요. 같은 팀의 국악방송 FM LIVE 단곡 클립으로 오디오를 맞춰 보면 나머지 구간도 찾을 수 있어요.</p>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+<div id="tip" hidden></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const SRC = {
+  broadcast: { label: "방송", color: "var(--src-broadcast)" },
+  fusion_team: { label: "퓨전팀 채널", color: "var(--src-fusion)" },
+  institution: { label: "국악 기관", color: "var(--src-institution)" },
+  keyword: { label: "키워드 검색", color: "var(--src-keyword)" },
+};
+const SRC_ORDER = ["broadcast", "fusion_team", "institution", "keyword"];
+const FORM = { broadcast: "방송 클립", live_stage: "공연 실황", lesson: "강습", official_mv: "공식 MV·음원", topic_audio: "Topic 음원", vertical: "세로 영상", clip: "짧은 클립 (60초 이하)", short: "숏츠", other: "기타" };
+const TIER = { 1: "공식 음원", 2: "방송 스튜디오", 3: "MV·방송 무대", 4: "공연 실황", 5: "직캠" };
+const rows = DATA.rows.map(r => ({ ...r, st: r.st === "topic" ? "fusion_team" : (SRC[r.st] ? r.st : "keyword") }));
+const fmtN = n => n == null ? "–" : n.toLocaleString("ko-KR");
+const fmtDur = s => { if (s == null) return "–"; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), ss = String(s % 60).padStart(2, "0"); return h ? `${h}:${String(m).padStart(2, "0")}:${ss}` : `${m}:${ss}`; };
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const $ = id => document.getElementById(id);
+
+let stars = new Set();
+try { stars = new Set(JSON.parse(localStorage.getItem("minyo-stars") || "[]")); } catch (e) { stars = new Set(); }
+const saveStars = () => { try { localStorage.setItem("minyo-stars", JSON.stringify([...stars])); } catch (e) {} };
+
+// ---- 요약 ----
+const tiered = rows.filter(r => r.tier);
+const songSet = new Set(rows.flatMap(r => r.songs));
+const listed = DATA.yield.reduce((a, y) => a + y.videos, 0), matched = DATA.yield.reduce((a, y) => a + y.matched, 0);
+const clean = tiered.filter(r => r.tier <= 2).length;
+$("lede").textContent = `방송·기관 채널, 퓨전팀 채널, 키워드 검색(희귀한 서도·제주 소리 포함)으로 모은 영상 ${rows.length.toLocaleString("ko-KR")}개예요. 메타데이터만 모았고 음원은 받지 않았어요.`;
+$("tiles").innerHTML = [
+  ["수집한 영상", fmtN(rows.length), `수집 회차 ${Object.keys(DATA.runs || {}).length}개`],
+  ["다룬 민요", fmtN(songSet.size) + "곡", "제목에서 찾은 곡 기준"],
+  ["채널 목록에서 찾은 민요 영상", fmtN(matched), `${fmtN(listed)}개 중 · 채널 ${DATA.yield.length}개`],
+  ["깨끗한 오디오", Math.round(clean / Math.max(tiered.length, 1) * 100) + "%", `${fmtN(tiered.length)}개 중 ${fmtN(clean)}개 · 공식 음원·방송 스튜디오`],
+].map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+
+// ---- 구성 막대 ----
+const bySrc = Object.fromEntries(SRC_ORDER.map(k => [k, rows.filter(r => r.st === k).length]));
+$("legend").innerHTML = SRC_ORDER.map(k => `<span><i class="sw" style="background:${SRC[k].color}"></i>${SRC[k].label}</span>`).join("");
+$("mixbar").innerHTML = SRC_ORDER.filter(k => bySrc[k]).map(k => `<div class="seg" style="flex:${bySrc[k]};background:${SRC[k].color}" data-tip="${SRC[k].label} · ${bySrc[k]}개 (${Math.round(bySrc[k] / rows.length * 100)}%)"></div>`).join("");
+$("mixlabels").innerHTML = SRC_ORDER.filter(k => bySrc[k]).map(k => `<div style="flex:${bySrc[k]}"><span class="num">${bySrc[k]}</span> ${SRC[k].label}</div>`).join("");
+
+// ---- 영상 목록 ----
+const PAGE = 60;
+let shown = PAGE;
+const state = { q: "", src: "", tier: "", form: "", sort: "views", multi: false, confirmed: false, star: false, etc: false, desc: false, segs: false, pop: false, lyr: false };
+function filtered() {
+  const q = state.q.trim().toLowerCase();
+  let out = rows.filter(r => {
+    if (state.src && r.st !== state.src) return false;
+    if (state.tier === "12" && !(r.tier && r.tier <= 2)) return false;
+    if (["3", "4", "5"].includes(state.tier) && String(r.tier) !== state.tier) return false;
+    if (state.form && r.form !== state.form) return false;
+    if (state.multi && !r.multi) return false;
+    if (state.etc && !r.etc) return false;
+    if (state.pop && !((r.pop && r.pop.length) || r.pg)) return false;
+    if (state.desc && !(r.dsongs && r.dsongs.length)) return false;
+    if (state.segs && !(r.segs && r.segs.length)) return false;
+    if (state.lyr && !r.lyr) return false;
+    if (state.confirmed && r.src !== "paren") return false;
+    if (state.star && !stars.has(r.id)) return false;
+    if (q && !(`${r.t} ${r.ch} ${r.route} ${r.songs.join(" ")} ${r.etc || ""} ${(r.dsongs || []).join(" ")} ${(r.pop || []).join(" ")} ${r.lyr || ""}`.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const key = { views: r => -(r.views ?? -1), recent: r => -(+r.yr || 0), long: r => -(r.dur ?? 0), n: r => r.n }[state.sort];
+  return out.sort((a, b) => key(a) - key(b));
+}
+function itemHTML(r) {
+  const tier = r.tier ? `<span class="tier" data-tip="오디오 등급 ${r.tier} · ${TIER[r.tier]}">${[1, 2, 3, 4, 5].map(i => `<i class="${i <= 6 - r.tier ? "on" : ""}"></i>`).join("")}</span> ${TIER[r.tier]}` : `<span style="color:var(--muted)">등급 없음</span>`;
+  const pop = (r.pop && r.pop.length) || r.pg ? `<span class="chip" data-tip="민요에서 나온 대중가요·트로트·창작 아리랑·국악가요 (민요 곡으로는 세지 않음)">대중가요 · ${esc([...(r.pop || []), r.pg].filter(Boolean).join(", "))}</span>` : "";
+  const etc = r.etc ? `<span class="chip" data-tip="곡명 사전에 없는 민요로 보이는 영상 (제목에서 뽑은 후보)">기타 민요 · ${esc(r.etc.replaceAll("|", ", "))}</span>` : "";
+  const songs = etc + pop + r.songs.map(s => `<span class="chip song${r.src === "paren" ? " confirmed" : ""}"${r.src === "paren" ? ' data-tip="제목 괄호에 원곡명이 적혀 있어요"' : ""}>${esc(s)}</span>`).join("");
+  const dchip = r.dsongs && r.dsongs.length ? `<span class="chip" data-tip="${esc(r.cue ? "설명란: …" + r.cue + "…" : "설명란에서 언급된 곡")}">설명란 · ${esc(r.dsongs.slice(0, 3).join(", "))}</span>` : "";
+  const segs = r.segs && r.segs.length ? `<span class="chip" data-tip="${esc(r.segs.map(([t, s]) => fmtDur(t) + " " + s.replaceAll("|", ", ")).join(" · "))}">구간 ${r.segs.length}개</span>` : "";
+  const flags = [dchip, segs, r.multi ? `<span class="chip flag"${r.mh ? ' data-tip="제목에 메들리·연곡·모음 등이 있지만 곡 목록은 없음"' : ""}>${r.mh ? "여러 곡 (목록 미상)" : "여러 곡"}</span>` : "", r.ai ? `<span class="chip flag">AI 의심</span>` : "", r.lyr ? `<span class="chip" data-tip="자막에서 이 곡의 고유 가사 구절이 잡혔어요">자막 가사 · ${esc(r.lyr)}</span>` : ""].join("");
+  return `<div class="item">
+    <button class="star" aria-pressed="${stars.has(r.id)}" aria-label="별표" data-id="${r.id}">★</button>
+    <div>
+      <a class="title" href="https://www.youtube.com/watch?v=${r.id}" target="_blank" rel="noopener">${esc(r.t)}</a>
+      <div class="meta"><span class="src"><i class="sw" style="background:${SRC[r.st].color}"></i>${esc(r.st === "keyword" ? "키워드 · " + r.route : r.route)}</span>${r.ch && r.ch !== r.route ? `<span>${esc(r.ch)}</span>` : ""}<span class="num">${esc(r.yr)}</span><span class="num">${fmtDur(r.dur)}</span><span class="num">조회 ${fmtN(r.views)}</span></div>
+      <div class="chips">${songs}<span class="chip">${FORM[r.form] || esc(r.form)}</span>${flags}</div>
+    </div>
+    <div class="side">${tier}</div>
+  </div>`;
+}
+function renderList() {
+  const items = filtered();
+  $("count").textContent = `${items.length}개 표시`;
+  $("list").innerHTML = items.length ? items.slice(0, shown).map(itemHTML).join("") : `<div class="empty">조건에 맞는 영상이 없어요. 필터를 줄여 보세요.</div>`;
+  $("more").hidden = items.length <= shown;
+}
+const bind = (id, k, ev = "input", get = el => el.value) => $(id).addEventListener(ev, e => { state[k] = get(e.target); shown = PAGE; renderList(); });
+bind("q", "q"); bind("f-src", "src", "change"); bind("f-tier", "tier", "change"); bind("f-form", "form", "change"); bind("sort", "sort", "change");
+bind("f-multi", "multi", "change", el => el.checked); bind("f-pop", "pop", "change", el => el.checked); bind("f-lyr", "lyr", "change", el => el.checked); bind("f-etc", "etc", "change", el => el.checked);
+bind("f-desc", "desc", "change", el => el.checked); bind("f-segs", "segs", "change", el => el.checked); bind("f-confirmed", "confirmed", "change", el => el.checked); bind("f-star", "star", "change", el => el.checked);
+$("more").addEventListener("click", () => { shown += PAGE; renderList(); });
+$("list").addEventListener("click", e => {
+  const b = e.target.closest(".star"); if (!b) return;
+  const id = b.dataset.id; stars.has(id) ? stars.delete(id) : stars.add(id); saveStars();
+  b.setAttribute("aria-pressed", stars.has(id)); if (state.star) renderList();
+});
+
+// ---- 곡별 ----
+const songStats = [...songSet].map(s => {
+  const rs = rows.filter(r => r.songs.includes(s));
+  return { s, n: rs.length, by: Object.fromEntries(SRC_ORDER.map(k => [k, rs.filter(r => r.st === k).length])), clean: rs.filter(r => r.tier && r.tier <= 2).length };
+}).sort((a, b) => b.n - a.n || a.s.localeCompare(b.s, "ko"));
+const maxN = Math.max(...songStats.map(x => x.n));
+$("songrows").innerHTML = songStats.map(x => `<tr>
+  <td><button class="songlink" data-song="${esc(x.s)}">${esc(x.s)}</button></td>
+  <td class="r num">${x.n}</td>
+  <td class="barcell"><div class="stack" style="width:${Math.max(x.n / maxN * 100, 2)}%">${SRC_ORDER.filter(k => x.by[k]).map(k => `<div class="seg" style="flex:${x.by[k]};background:${SRC[k].color}" data-tip="${esc(x.s)} · ${SRC[k].label} ${x.by[k]}개"></div>`).join("")}</div></td>
+  <td class="r num">${x.clean || "–"}</td></tr>`).join("");
+$("songrows").addEventListener("click", e => {
+  const b = e.target.closest(".songlink"); if (!b) return;
+  state.q = b.dataset.song; $("q").value = b.dataset.song; shown = PAGE; renderList(); selectTab("videos");
+});
+
+// ---- 채널별 ----
+const TYPE = { broadcast: "방송", fusion_team: "퓨전팀", institution: "기관", topic: "Topic" };
+$("chanrows").innerHTML = [...DATA.yield].sort((a, b) => b.matched - a.matched).map(y => {
+  const rate = y.matched / y.videos;
+  return `<tr><td>${esc(y.seed)}</td><td><span class="src" style="display:inline-flex;gap:6px;align-items:center"><i class="sw" style="background:${(SRC[y.type === "topic" ? "fusion_team" : y.type] || SRC.keyword).color}"></i>${TYPE[y.type] || y.type}</span></td>
+  <td class="r num">${fmtN(y.videos)}</td><td class="r num">${fmtN(y.matched)}</td>
+  <td><div class="rate"><div class="track"><div class="fill" style="width:${(rate * 100).toFixed(1)}%"></div></div><span class="num">${Math.round(rate * 100)}%</span></div></td>
+  <td class="r num">${y.paren || "–"}</td><td class="r num">${y.detailed != null ? fmtN(y.detailed) : "–"}</td><td class="r num">${y.sec != null ? Math.round(y.sec) + "초" : "–"}</td></tr>`;
+}).join("");
+
+// ---- 긴 영상 ----
+$("seglist").innerHTML = DATA.segments.length ? DATA.segments.map(s => `<div class="segrow">
+  <a class="num" href="https://www.youtube.com/watch?v=${DATA.longVideo}&t=${s.start}s" target="_blank" rel="noopener">${fmtDur(s.start)} – ${fmtDur(s.end)}</a>
+  <div><strong>${esc(s.song)}</strong></div>
+  <div style="font-size:12px;color:var(--muted)">일치한 구절 ${s.max_hits}개</div></div>`).join("") : `<div class="empty">찾은 구간이 없어요.</div>`;
+
+// ---- 탭 ----
+function selectTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.tab === name));
+  ["videos", "songs", "channels", "long"].forEach(p => $("p-" + p).hidden = p !== name);
+  try { localStorage.setItem("minyo-tab", name); } catch (e) {}
+}
+document.querySelector(".tabs").addEventListener("click", e => { const t = e.target.closest(".tab"); if (t) selectTab(t.dataset.tab); });
+$("c-videos").textContent = rows.length; $("c-songs").textContent = songSet.size; $("c-channels").textContent = DATA.yield.length;
+let initial = "videos";
+try { initial = localStorage.getItem("minyo-tab") || "videos"; } catch (e) {}
+if (location.hash && ["videos", "songs", "channels", "long"].includes(location.hash.slice(1))) initial = location.hash.slice(1);
+selectTab(initial);
+
+// ---- 툴팁 ----
+const tip = $("tip");
+document.addEventListener("pointermove", e => {
+  const t = e.target.closest("[data-tip]");
+  if (!t) { tip.hidden = true; return; }
+  tip.textContent = t.dataset.tip; tip.hidden = false;
+  const x = Math.min(e.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
+  tip.style.left = x + "px"; tip.style.top = (e.clientY + 14) + "px";
+});
+document.addEventListener("pointerleave", () => tip.hidden = true);
+
+$("foot").textContent = `데이터 갱신 ${DATA.built} · 자동 라벨(매칭곡, 형태, 오디오 등급)은 규칙으로 추정한 값이라 틀린 것이 섞여 있어요.`;
+renderList();
+</script>
